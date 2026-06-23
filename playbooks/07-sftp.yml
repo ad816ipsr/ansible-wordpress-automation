@@ -1,0 +1,40 @@
+---
+- name: Configure SFTP Access
+  hosts: webserver
+  become: yes
+
+  vars_files:
+    - ../vars/main.yml
+
+  tasks:
+
+    - name: Install passlib for password hashing
+      pip:
+        name: passlib
+        executable: pip3
+
+    - name: Set password for website user
+      user:
+        name: "{{ website_user }}"
+        password: "{{ sftp_password | password_hash('sha512') }}"
+        shell: /bin/bash
+
+    - name: Ensure SSH password authentication is enabled
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication yes'
+        backup: yes
+
+    - name: Ensure SFTP subsystem exists
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^Subsystem\s+sftp'
+        line: 'Subsystem sftp /usr/libexec/openssh/sftp-server'
+        backup: yes
+
+    - name: Restart SSH service
+      service:
+        name: sshd
+        state: restarted
+

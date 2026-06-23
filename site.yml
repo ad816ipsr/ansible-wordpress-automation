@@ -1,0 +1,10 @@
+---
+- import_playbook: playbooks/01-server-setup.yml
+- import_playbook: playbooks/02-user-setup.yml
+- import_playbook: playbooks/03-nginx.yml
+- import_playbook: playbooks/04-php-mariadb.yml
+- import_playbook: playbooks/05-database.yml
+- import_playbook: playbooks/06-wordpress.yml
+- import_playbook: playbooks/07-sftp.yml
+- import_playbook: playbooks/08-phpmyadmin.yml
+- import_playbook: playbooks/09-ssl.yml

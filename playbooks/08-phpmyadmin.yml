@@ -1,0 +1,82 @@
+---
+- name: Install and Configure phpMyAdmin
+  hosts: webserver
+  become: yes
+
+  tasks:
+
+    - name: Download phpMyAdmin
+      get_url:
+        url: https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz
+        dest: /tmp/phpmyadmin.tar.gz
+
+    - name: Extract phpMyAdmin
+      unarchive:
+        src: /tmp/phpmyadmin.tar.gz
+        dest: /tmp
+        remote_src: yes
+
+    - name: Find extracted phpMyAdmin folder
+      shell: ls -d /tmp/phpMyAdmin-*-all-languages
+      register: phpmyadmin_folder
+
+    - name: Move phpMyAdmin to /usr/share/phpMyAdmin
+      command: mv {{ phpmyadmin_folder.stdout }} /usr/share/phpMyAdmin
+      args:
+        creates: /usr/share/phpMyAdmin
+
+    - name: Create phpMyAdmin temporary directory
+      file:
+        path: /usr/share/phpMyAdmin/tmp
+        state: directory
+        owner: nginx
+        group: nginx
+        mode: '0775'
+
+    - name: Copy sample config
+      copy:
+        src: /usr/share/phpMyAdmin/config.sample.inc.php
+        dest: /usr/share/phpMyAdmin/config.inc.php
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Configure phpMyAdmin blowfish secret
+      lineinfile:
+        path: /usr/share/phpMyAdmin/config.inc.php
+        regexp: "^\\$cfg\\['blowfish_secret'\\]"
+        line: "$cfg['blowfish_secret'] = 'AstrongRandomSecretKeyForphpMyAdmin123!';"
+
+    - name: Create Nginx phpMyAdmin config
+      copy:
+        dest: /etc/nginx/conf.d/phpmyadmin.conf
+        content: |
+          server {
+              listen 8080;
+              server_name _;
+
+              root /usr/share/phpMyAdmin;
+              index index.php index.html;
+
+              location / {
+                  try_files $uri $uri/ /index.php;
+              }
+
+              location ~ \.php$ {
+                  include fastcgi_params;
+                  fastcgi_pass unix:/run/php-fpm/www.sock;
+                  fastcgi_index index.php;
+                  fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+              }
+          }
+
+    - name: Restart PHP-FPM
+      service:
+        name: php-fpm
+        state: restarted
+
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted

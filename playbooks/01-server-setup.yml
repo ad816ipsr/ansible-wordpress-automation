@@ -1,0 +1,23 @@
+---
+- name: Server Preparation
+  hosts: webserver
+  become: yes
+
+  tasks:
+
+    - name: Update all packages
+      dnf:
+        name: "*"
+        state: latest
+        update_cache: yes
+
+    - name: Install common packages
+      dnf:
+        name:
+          - wget
+          - unzip
+          - tar
+          - vim
+          - git
+          - policycoreutils-python-utils
+        state: present

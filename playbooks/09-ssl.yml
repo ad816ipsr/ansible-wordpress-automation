@@ -1,0 +1,45 @@
+---
+- name: Install and configure SSL with Certbot
+  hosts: webserver
+  become: yes
+
+  vars_files:
+    - ../vars/main.yml
+
+  tasks:
+    - name: Install Certbot and Nginx plugin
+      dnf:
+        name:
+          - certbot
+          - python3-certbot-nginx
+        state: present
+
+    - name: Check if SSL certificate already exists
+      stat:
+        path: "/etc/letsencrypt/live/{{ domain_name }}/fullchain.pem"
+      register: ssl_cert
+
+    - name: Generate SSL certificate using Certbot
+      command: >
+        certbot --nginx
+        -d {{ domain_name }}
+        -d www.{{ domain_name }}
+        --non-interactive
+        --agree-tos
+        --email {{ certbot_email }}
+        --redirect
+      when: not ssl_cert.stat.exists
+
+    - name: Reinstall existing certificate if already present
+      command: >
+        certbot install --nginx
+        --cert-name {{ domain_name }}
+      when: ssl_cert.stat.exists
+
+    - name: Test Nginx configuration
+      command: nginx -t
+
+    - name: Reload Nginx
+      systemd:
+        name: nginx
+        state: reloaded

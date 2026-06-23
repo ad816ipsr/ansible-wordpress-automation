@@ -1,0 +1,19 @@
+---
+domain_name: adarshps.online
+
+website_user: adarsh
+website_name: personalblog
+website_root: /home/adarsh/personalblog/public
+
+db_name: wordpress_db
+db_user: wordpress_user
+db_password: "WpStrongPass@123"
+
+wordpress_site_title: "Blog"
+wordpress_admin_user: "admin"
+wordpress_admin_password: "AdminStrongPass@123"
+wordpress_admin_email: "admin@adarshps.online"
+
+sftp_password: "SftpStrongPass@123"
+
+certbot_email: "adarsh.p.adarsham@gmail.com"

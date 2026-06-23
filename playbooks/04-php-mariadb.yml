@@ -1,0 +1,39 @@
+---
+- name: Install PHP and MariaDB
+  hosts: webserver
+  become: yes
+
+  tasks:
+
+    - name: Install PHP and required extensions
+      dnf:
+        name:
+          - php
+          - php-fpm
+          - php-mysqlnd
+          - php-cli
+          - php-json
+          - php-gd
+          - php-mbstring
+          - php-xml
+          - php-curl
+          - php-zip
+        state: present
+
+    - name: Install MariaDB Server
+      dnf:
+        name:
+          - mariadb105-server
+        state: present
+
+    - name: Enable PHP-FPM
+      service:
+        name: php-fpm
+        enabled: yes
+        state: started
+
+    - name: Enable MariaDB
+      service:
+        name: mariadb
+        enabled: yes
+        state: started
